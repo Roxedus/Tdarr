@@ -57,7 +57,7 @@ CMD sudo service mongodb start && \
  echo "Mongo started, waiting 10 seconds" && \
  sleep 10 && \
  echo "Tdarr started" && \
- sudo MONGO_URL=mongodb://localhost:27017/Tdarr PORT=8265 ROOT_URL=http://localhost/ node /home/Source/Build/Tdarr/bundle/main.js
+ sudo MONGO_URL=mongodb://localhost:27017/Tdarr PORT=8265 ROOT_URL=http://localhost/ node --max-old-space-size=4096 /home/Source/Build/Tdarr/bundle/main.js
 
 
 
