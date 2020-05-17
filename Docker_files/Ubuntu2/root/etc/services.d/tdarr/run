@@ -1,0 +1,14 @@
+#!/usr/bin/with-contenv bash
+
+NODE_ARG="${EXTRA_NODE_ARG:---max-old-space-size=16384}"
+
+until nc -z localhost 27017
+do
+    sleep 1
+done
+
+echo "Starting Tdarr with ${NODE_ARG}"
+
+cd /app/Tdarr/bundle
+
+exec s6-setuidgid Tdarr node ${NODE_ARG} main.js

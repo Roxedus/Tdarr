@@ -1,0 +1,18 @@
+#!/usr/bin/with-contenv bash
+
+groupmod -o -g "${PGID}" Tdarr
+usermod -o -u "${PUID}" Tdarr
+
+echo "
+User uid:    $(id -u Tdarr)
+User gid:    $(id -g Tdarr)
+-------------------------------------
+"
+
+ASSETS="/app/Tdarr/bundle/programs/server/assets/"
+
+chown -R Tdarr:Tdarr "${HOME}"
+chown -R Tdarr:Tdarr /temp
+
+chmod a+rwx -R "${ASSETS}"app/fileScanner/*
+chmod a+rwx -R "${ASSETS}"app/ffmpeg/*

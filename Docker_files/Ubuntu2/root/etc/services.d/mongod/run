@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv bash
+
+echo "Starting MongoDB"
+
+exec /usr/bin/mongod --config /etc/mongodb.conf run
