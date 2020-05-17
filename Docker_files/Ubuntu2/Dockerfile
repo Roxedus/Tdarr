@@ -66,7 +66,7 @@ RUN apt update -qq && \
 FROM ubuntu@sha256:e5dd9dbb37df5b731a6688fa49f4003359f6f126958c9c928f937bec69836320
 LABEL maintainer="Roxedus"
 
-ARG VERSION="v1.108-Beta"
+ARG VERSION="v1.109-Beta"
 ENV VERSION="${VERSION}"
 
 ARG DEBIAN_FRONTEND="noninteractive"
