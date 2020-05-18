@@ -24,23 +24,23 @@ jobs:
         run: |
           choco uninstall nodejs-lts -y
           choco install meteor -y
-          tree C:\Users\runneradmin\AppData\Local\.meteor /f /a
+          del C:\Users\runneradmin\AppData\Local\.meteor\packages\meteor-tool\1.10.2\mt-os.windows.x86_64\dev_bundle\bin\7z.exe
           echo ::add-path::C:\Users\runneradmin\AppData\Local\.meteor
 
-      #rm C:\Users\runneradmin\AppData\Local\.meteor\packages\meteor-tool\1.10.2\mt-os.windows.x86_32\dev_bundle\bin
+      #tree C:\Users\runneradmin\AppData\Local\.meteor /f /a
       #specify cmd as powershell is default (necessary?)
       - name: update
         timeout-minutes: 120
         shell: cmd
         run: |
-          meteor update --verbose
+          meteor update
 
       - name: npm
         shell: cmd
         run: |
           meteor npm install --production
-          meteor npm update
 
+        #meteor npm update
       - name: Build
         shell: cmd
         run: |
