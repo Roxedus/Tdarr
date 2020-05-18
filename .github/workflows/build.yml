@@ -24,7 +24,7 @@ jobs:
         run: |
           choco uninstall nodejs-lts -y
           choco install meteor -y
-          tree \f C:\Users\runneradmin\AppData\Local\.meteor\packages\meteor-tool\1.10.2\mt-os.windows.x86_32\
+          tree /f C:\Users\runneradmin\AppData\Local\.meteor\packages\meteor-tool\1.10.2\mt-os.windows.x86_32\
           echo ::add-path::C:\Users\runneradmin\AppData\Local\.meteor
 
       #rm C:\Users\runneradmin\AppData\Local\.meteor\packages\meteor-tool\1.10.2\mt-os.windows.x86_32\dev_bundle\bin
