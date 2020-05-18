@@ -29,11 +29,11 @@ jobs:
 
       #tree C:\Users\runneradmin\AppData\Local\.meteor /f /a
       #specify cmd as powershell is default (necessary?)
-      - name: update
-        timeout-minutes: 120
-        shell: cmd
-        run: |
-          meteor update
+      # - name: update
+      #   timeout-minutes: 120
+      #   shell: cmd
+      #   run: |
+      #     meteor update
 
       - name: npm
         shell: cmd
