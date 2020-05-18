@@ -21,11 +21,20 @@ jobs:
 
       #GitHub Actions default shell on Windows runners is changing to PowerShell 10/23
       - name: Install Meteor
-        uses: meteorengineer/setup-meteor@v1
-        with:
-          meteor-release: "1.8.1"
+        run: |
+          choco uninstall nodejs-lts -y
+          choco install meteor -y
+          tree C:\Users\runneradmin\AppData\Local\.meteor
+          echo ::add-path::C:\Users\runneradmin\AppData\Local\.meteor
+      # rm C:\Users\runneradmin\AppData\Local\.meteor\packages\meteor-tool\1.8.1_3\mt-os.windows.x86_32\dev_bundle\bin
+      #specify cmd as powershell is default (necessary?)
+      - name: update
+        timeout-minutes: 120
+        shell: cmd
+        run: |
+          meteor update --verbose
 
-      - name: np,
+      - name: npm
         shell: cmd
         run: |
           meteor npm install --production
@@ -35,7 +44,7 @@ jobs:
         shell: cmd
         run: |
           set NODE_OPTIONS=--max-old-space-size=4048
-          meteor build --server localhost:8265 --directory ../tdarr-${{ matrix.os }} --architecture os.windows.x86_64
+          meteor build --verbose --server localhost:8265 --directory ../tdarr-${{ matrix.os }} --architecture os.windows.x86_64
 
       - name: Pack ${{ matrix.os }}.zip
         run: |
