@@ -22,8 +22,8 @@ jobs:
       #GitHub Actions default shell on Windows runners is changing to PowerShell 10/23
       - name: Install Meteor
         uses: meteorengineer/setup-meteor@v1
-          with:
-            meteor-release: '1.8.1'
+        with:
+          meteor-release: "1.8.1"
 
       - name: np,
         shell: cmd
