@@ -21,16 +21,9 @@ jobs:
 
       #GitHub Actions default shell on Windows runners is changing to PowerShell 10/23
       - name: Install Meteor
-        run: |
-          choco uninstall nodejs-lts -y
-          choco install meteor -y
-          echo ::add-path::C:\Users\runneradmin\AppData\Local\.meteor
-
-      #specify cmd as powershell is default (necessary?)
-      - name: update
-        shell: cmd
-        run: |
-          meteor update
+        uses: meteorengineer/setup-meteor@v1
+          with:
+            meteor-release: '1.8.1'
 
       - name: np,
         shell: cmd
