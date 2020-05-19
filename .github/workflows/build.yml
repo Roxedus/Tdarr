@@ -52,7 +52,7 @@ jobs:
           mkdir .\out
           7z a -r .\out\tdarr-${{ matrix.os }}.zip .\tdarr-${{ matrix.os }}
       - name: Upload failzip
-        if: failure
+        if: failure()
         #This uploads artifacts from your workflow.
         uses: actions/upload-artifact@v1
         with:
