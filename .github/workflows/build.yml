@@ -49,25 +49,25 @@ jobs:
           set METEOR_PROFILE=100
           set METEOR_DEBUG_BUILD=1
           set NODE_OPTIONS=--max-old-space-size=6040
-          meteor build --debug --server localhost:8265 --directory ${{ GITHUB_WORKSPACE }}/tdarr-windows-2019 --architecture os.windows.x86_64
+          meteor build --debug --server localhost:8265 --directory \github\home/tdarr-windows-2019 --architecture os.windows.x86_64
       - name: Pack ${{ matrix.os }}.zip
         if: failure()
         run: |
-          mkdir ${{ GITHUB_WORKSPACE }}\out
-          7z a -r ${{ GITHUB_WORKSPACE }}\out\tdarr-${{ matrix.os }}.zip ${{ GITHUB_WORKSPACE }}\tdarr-${{ matrix.os }}
+          mkdir \github\home\out
+          7z a -r \github\home\out\tdarr-${{ matrix.os }}.zip \github\home\tdarr-${{ matrix.os }}
       - name: Upload failzip
         if: failure()
         #This uploads artifacts from your workflow.
         uses: actions/upload-artifact@v1
         with:
           name: tdarr-${{ matrix.os }}
-          path: ${{ GITHUB_WORKSPACE }}\out
+          path: \github\home\out
       - name: Upload tdarr-${{ matrix.os }}.zip
         #This uploads artifacts from your workflow.
         uses: actions/upload-artifact@v1
         with:
           name: tdarr-${{ matrix.os }}
-          path: ${{ GITHUB_WORKSPACE }}\out
+          path: \github\home\out
   # Bundle:
   #   name: Build bundle ${{ matrix.os }}
   #   runs-on: ${{ matrix.os }}
