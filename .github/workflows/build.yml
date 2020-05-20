@@ -48,6 +48,7 @@ jobs:
         run: |
           .github\FUCKING_RUN.bat
       - name: Pack ${{ matrix.os }}.zip
+        if: failure()
         run: |
           mkdir .\out
           7z a -r .\out\tdarr-${{ matrix.os }}.zip .\tdarr-${{ matrix.os }}
