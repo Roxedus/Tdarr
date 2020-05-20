@@ -50,21 +50,21 @@ jobs:
       - name: Pack ${{ matrix.os }}.zip
         if: failure()
         run: |
-          mkdir .\out
-          7z a -r .\out\tdarr-${{ matrix.os }}.zip \tdarr-${{ matrix.os }}
+          mkdir ${{ HOME }}\out
+          7z a -r ${{ HOME }}\out\tdarr-${{ matrix.os }}.zip ${{ HOME }}\tdarr-${{ matrix.os }}
       - name: Upload failzip
         if: failure()
         #This uploads artifacts from your workflow.
         uses: actions/upload-artifact@v1
         with:
           name: tdarr-${{ matrix.os }}
-          path: .\out
+          path: ${{ HOME }}\out
       - name: Upload tdarr-${{ matrix.os }}.zip
         #This uploads artifacts from your workflow.
         uses: actions/upload-artifact@v1
         with:
           name: tdarr-${{ matrix.os }}
-          path: .\out
+          path: ${{ HOME }}\out
   # Bundle:
   #   name: Build bundle ${{ matrix.os }}
   #   runs-on: ${{ matrix.os }}
