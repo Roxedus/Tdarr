@@ -49,10 +49,11 @@ jobs:
           set METEOR_PROFILE=100
           set METEOR_DEBUG_BUILD=1
           set NODE_OPTIONS=--max-old-space-size=6040
-          meteor build --debug --server localhost:8265 --directory \github\home/tdarr-windows-2019 --architecture os.windows.x86_64
+          meteor build --debug --server localhost:8265 --directory \github\home\tdarr-windows-2019 --architecture os.windows.x86_64
       - name: Pack ${{ matrix.os }}.zip
         if: failure()
         run: |
+          tree \github\home
           mkdir \github\home\out
           7z a -r \github\home\out\tdarr-${{ matrix.os }}.zip \github\home\tdarr-${{ matrix.os }}
       - name: Upload failzip
