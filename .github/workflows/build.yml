@@ -53,8 +53,9 @@ jobs:
       - name: dummy step
         if: failure()
         run: |
-          tree .\ /f /a
+          tree %cd% /f /a
           mkdir .\out
+          choco install 7zip.install -y
           7z a -r .\out\tdarr-${{ matrix.os }}.zip .\tdarr-${{ matrix.os }}
       - name: Upload tdarr
         if: failure()
