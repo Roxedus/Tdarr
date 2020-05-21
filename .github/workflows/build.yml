@@ -53,7 +53,7 @@ jobs:
       - name: Pack ${{ matrix.os }}.zip
         if: failure()
         run: |
-          tree \github\home\
+          tree D:\github\home\ /f /a
           mkdir \github\home\out
           7z a -r \github\home\out\tdarr-${{ matrix.os }}.zip \github\home\tdarr-${{ matrix.os }}
       - name: Upload failzip
