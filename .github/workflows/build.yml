@@ -56,8 +56,8 @@ jobs:
           tree .\ /f /a
           mkdir .\out
           7z a -r .\out\tdarr-${{ matrix.os }}.zip .\tdarr-${{ matrix.os }}
-      - name: Upload tdarr-
-        id: failure()
+      - name: Upload tdarr
+        if: failure()
         #This uploads artifacts from your workflow.
         uses: actions/upload-artifact@v1
         with:
