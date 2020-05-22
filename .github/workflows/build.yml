@@ -51,28 +51,22 @@ jobs:
           set NODE_OPTIONS=--max-old-space-size=6040
           meteor build --debug --server localhost:8265 --directory .\tdarr-windows-2019 --architecture os.windows.x86_64
       - name: dummy step
-        if: failure()
+        if: failure() success()
         run: |
           tree D:\ /f /a
           tree C:\ /f /a
           mkdir .\out
           choco install 7zip.install -y
           7z a -r .\out\tdarr-${{ matrix.os }}.zip .\tdarr-${{ matrix.os }}
-      - name: Upload tdarr
-        if: failure()
-        #This uploads artifacts from your workflow.
-        uses: actions/upload-artifact@v1
-        with:
-          name: tdarr-${{ matrix.os }}
-          path: .\out
 
-      - name: Pack ${{ matrix.os }}.zip
-        if: failure()
-        run: |
-          tree .\ /f /a
-          mkdir .\out
-          7z a -r .\out\tdarr-${{ matrix.os }}.zip .\tdarr-${{ matrix.os }}
+      # - name: Pack ${{ matrix.os }}.zip
+      #   if: failure()
+      #   run: |
+      #     tree .\ /f /a
+      #     mkdir .\out
+      #     7z a -r .\out\tdarr-${{ matrix.os }}.zip .\tdarr-${{ matrix.os }}
       - name: Upload tdarr-${{ matrix.os }}.zip
+        if: failure() success()
         #This uploads artifacts from your workflow.
         uses: actions/upload-artifact@v1
         with:
