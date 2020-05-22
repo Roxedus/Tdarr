@@ -51,7 +51,7 @@ jobs:
           set NODE_OPTIONS=--max-old-space-size=6040
           meteor build --debug --server localhost:8265 --directory .\tdarr-windows-2019 --architecture os.windows.x86_64
       - name: dummy step
-        if: failure() success()
+        continue-on-error: true
         run: |
           tree D:\ /f /a
           tree C:\ /f /a
@@ -66,7 +66,7 @@ jobs:
       #     mkdir .\out
       #     7z a -r .\out\tdarr-${{ matrix.os }}.zip .\tdarr-${{ matrix.os }}
       - name: Upload tdarr-${{ matrix.os }}.zip
-        if: failure() success()
+        continue-on-error: true
         #This uploads artifacts from your workflow.
         uses: actions/upload-artifact@v1
         with:
