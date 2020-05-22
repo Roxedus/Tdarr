@@ -44,7 +44,7 @@ jobs:
         #meteor npm update
       - name: Build
         shell: cmd
-        timeout-minutes: 60
+        #timeout-minutes: 60
         run: |
           set METEOR_PROFILE=100
           set METEOR_DEBUG_BUILD=1
