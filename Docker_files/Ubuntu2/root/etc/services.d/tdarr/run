@@ -9,6 +9,6 @@ done
 
 echo "Starting Tdarr with ${NODE_ARG}"
 
-cd /app/Tdarr/bundle
+cd /app/Tdarr/bundle  || exit 1
 
-exec s6-setuidgid Tdarr node ${NODE_ARG} main.js
+exec s6-setuidgid Tdarr node "${NODE_ARG}" main.js
