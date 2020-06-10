@@ -23,7 +23,7 @@ jobs:
       - name: Install Meteor
         run: |
           Set-MpPreference -DisableRealtimeMonitoring $true
-          choco uninstall nodejs-lts 7zip.install 7zip -y
+          choco uninstall nodejs-lts 7zip.install -y
           choco install meteor -y
           echo ::add-path::C:\Users\runneradmin\AppData\Local\.meteor
 
