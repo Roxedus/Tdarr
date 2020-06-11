@@ -48,12 +48,10 @@ jobs:
         run: |
           $Env:METEOR_PROFILE=100
           $Env:METEOR_DEBUG_BUILD=1
-          $Env:NODE_OPTIONS=--max-old-space-size=6144
+          $Env:NODE_OPTIONS="--max-old-space-size=6144"
           meteor build --debug --server localhost:8265 --directory .\tdarr-windows-2019 --architecture os.windows.x86_64 | Select-String -Pattern ".*Total: [0-9]*,[0-9]* ms \(meteor build\).*"
       - name: dummy step
         run: |
-          tree D:\ /f /a
-          tree C:\ /f /a
           mkdir .\out
           choco install 7zip.install -y
           7z a -r .\out\tdarr-${{ matrix.os }}.zip .\tdarr-${{ matrix.os }}
