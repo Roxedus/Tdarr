@@ -43,13 +43,12 @@ jobs:
 
         #meteor npm update
       - name: Build
-        shell: cmd
         timeout-minutes: 240
         continue-on-error: true
         run: |
-          set METEOR_PROFILE=100
-          set METEOR_DEBUG_BUILD=1
-          set NODE_OPTIONS=--max-old-space-size=6144
+          $Env:METEOR_PROFILE=100
+          $Env:METEOR_DEBUG_BUILD=1
+          $Env:NODE_OPTIONS=--max-old-space-size=6144
           meteor build --debug --server localhost:8265 --directory .\tdarr-windows-2019 --architecture os.windows.x86_64 | Select-String -Pattern ".*Total: [0-9]*,[0-9]* ms \(meteor build\).*"
       - name: dummy step
         run: |
