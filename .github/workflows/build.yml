@@ -46,11 +46,11 @@ jobs:
         timeout-minutes: 240
         continue-on-error: true
         env:
-          METEOR_PROFILE: 100
+          METEOR_PROFILE: 1000
           METEOR_DEBUG_BUILD: 1
           NODE_OPTIONS: "--max-old-space-size=6144"
         run: |
-          meteor build --debug --server localhost:8265 --directory .\tdarr-windows-2019 --architecture os.windows.x86_64
+          meteor build --debug --server localhost:8265 --directory .\tdarr-windows-2019 --architecture os.windows.x86_64 && echo yeet
       - name: dummy step
         run: |
           mkdir .\out

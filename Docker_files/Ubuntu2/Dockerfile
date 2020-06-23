@@ -1,4 +1,8 @@
-FROM ubuntu@sha256:e5dd9dbb37df5b731a6688fa49f4003359f6f126958c9c928f937bec69836320 AS BuildHandBrake
+FROM ubuntu@sha256:e5dd9dbb37df5b731a6688fa49f4003359f6f126958c9c928f937bec69836320 as BuildBase
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+COPY root/etc/d.so.conf.d/imsdk.conf /etc/ld.so.conf.d/imsdk.conf
 
 RUN apt update -qq && \
     apt -y install \
@@ -8,13 +12,16 @@ RUN apt update -qq && \
     build-essential \
     bzip2 \
     cmake \
-    git-core \
+    git \
     libass-dev \
     libbz2-dev \
+    libdrm-dev \
     libfdk-aac-dev \
     libfontconfig1-dev \
     libfreetype6-dev \
     libfribidi-dev \
+    libgl1-mesa-dev \
+    libgl1-mesa-glx \
     libgtk-3-dev \
     libharfbuzz-dev \
     libjansson-dev \
@@ -23,17 +30,21 @@ RUN apt update -qq && \
     libnuma-dev \
     libogg-dev \
     libopus-dev \
+    libpciaccess-dev \
+    libpciaccess0 \
+    libperl-dev \
     libsamplerate-dev \
     libsdl2-dev \
     libspeex-dev \
     libtheora-dev \
     libtool \
     libtool-bin \
-    libtool-bin \
+    libva-dev \
     libva-dev \
     libvdpau-dev \
     libvorbis-dev \
     libvpx-dev \
+    libx11-dev \
     libx264-dev \
     libx265-dev \
     libxcb-shm0-dev \
@@ -42,9 +53,11 @@ RUN apt update -qq && \
     libxml2-dev \
     m4 \
     make \
+    mercurial \
     nasm \
     nasm yasm \
     ninja-build \
+    openbox libx11-dev \
     patch \
     pkg-config \
     python \
@@ -52,15 +65,66 @@ RUN apt update -qq && \
     python3-pip \
     tar \
     texinfo \
+    vainfo \
+    vdpauinfo \
     wget \
+    #xorg \
+    #xorg-dev \
     zlib1g-dev && \
-    pip3 install meson && \
-    git clone https://github.com/HandBrake/HandBrake.git && \
+    pip3 install meson
+
+FROM BuildBase as BuildHandBrake
+
+RUN git clone https://github.com/HandBrake/HandBrake.git && \
     cd HandBrake && \
     git tag --list | grep ^1\.3\. && \
     git checkout refs/tags/$(git tag -l | grep -E '^1\.3\.1' | tail -n 1) && \
     ./configure --enable-qsv --launch-jobs=8 --launch --force && \
     make --directory=build install
+
+FROM BuildBase as BuildLibva
+
+RUN git clone https://github.com/intel/libva.git && \
+    cd libva && \
+    ./autogen.sh && \
+    make install
+
+FROM BuildBase as BuildMsdk
+COPY --from=BuildLibva /usr/local/include/va /usr/local/include/va
+COPY --from=BuildLibva /usr/local/lib/libva* /usr/local/lib/
+COPY --from=BuildLibva /usr/local/lib/pkgconfig/libva* /usr/local/lib/pkgconfig/
+RUN git clone https://github.com/Intel-Media-SDK/MediaSDK msdk && \
+    cd msdk && \
+    mkdir build && cd build && \
+    cmake .. && \
+    make && \
+    make install
+
+FROM BuildBase as BuildGgmlib
+
+RUN git clone https://github.com/intel/gmmlib.git && \
+    cd gmmlib && \
+    mkdir build && cd build && \
+    cmake .. && \
+    make -j8 && \
+    make install
+
+FROM BuildBase as MediaDriver
+COPY --from=BuildLibva /usr/local/include/va /usr/local/include/va
+COPY --from=BuildLibva /usr/local/lib/libva* /usr/local/lib/
+COPY --from=BuildLibva /usr/local/lib/pkgconfig/libva* /usr/local/lib/pkgconfig/
+
+
+COPY --from=BuildGgmlib /usr/local/include/igdgmm/ /usr/local/include/igdgmm
+COPY --from=BuildGgmlib /usr/local/lib/libigdgmm* /usr/local/lib/
+COPY --from=BuildGgmlib /usr/local/lib/pkgconfig/igdgmm.pc /usr/local/lib/pkgconfig/igdgmm.pc
+
+RUN git clone https://github.com/intel/media-driver.git  && \
+    mkdir build_media && cd build_media  && \
+    cmake ../media-driver  && \
+    make -j8  && \
+    make install
+
 
 
 FROM ubuntu@sha256:e5dd9dbb37df5b731a6688fa49f4003359f6f126958c9c928f937bec69836320
@@ -69,10 +133,8 @@ LABEL maintainer="Roxedus"
 ARG VERSION="v1.109-Beta"
 ENV VERSION="${VERSION}"
 
-ARG DEBIAN_FRONTEND="noninteractive"
-
 ENV PUID="1000" PGID="1000" UMASK="002" TZ="Etc/UTC" HOME="/home/Tdarr" MONGO_URL="mongodb://localhost:27017/Tdarr" PORT="8265" ROOT_URL="http://localhost"
-ENV LANGUAGE="en_US.UTF-8" LANG="en_US.UTF-8" NVIDIA_DRIVER_CAPABILITIES="compute,video,utility"
+ENV LANGUAGE="en_US.UTF-8" LANG="en_US.UTF-8" NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" DEBIAN_FRONTEND="noninteractive"
 ENV S6_REL=2.0.0.1
 
 # install dependencies
@@ -83,7 +145,7 @@ ENV S6_REL=2.0.0.1
 
 RUN apt update && \
     apt install -y apt-utils locales tzdata && \
-    locale-gen en_US.UTF-8 && \
+    locale-gen "${LANG}" && \
     dpkg-reconfigure locales && \
     apt upgrade -y && \
     apt install -y --no-install-recommends --no-install-suggests \
@@ -110,6 +172,13 @@ RUN apt update && \
     #        libnss3 \
     #        libtesseract-dev \
     #        libxss1 \
+    libdrm-dev \
+    libgl1-mesa-dev \
+    libgl1-mesa-glx \
+    libx11-dev \
+    vainfo \
+    vdpauinfo \
+    #xorg \
     mongodb-server \
     netcat \
     ###        packagekit-gtk3-module \
@@ -156,7 +225,18 @@ RUN apt update && \
     apt autoremove -y && \
     apt clean && \
     rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/*
+
 COPY --from=BuildHandBrake /usr/local/bin/HandBrakeCLI /usr/local/bin/HandBrakeCLI
-COPY --chown=${PUID}:${PGID} root/ /
+
+COPY --from=BuildLibva ["/usr/local/include/va", "/usr/local/include/va"] ["/usr/local/lib/libva*", "/usr/local/lib/"] ["/usr/local/lib/pkgconfig/libva*", "/usr/local/lib/pkgconfig/"]
+
+COPY --from=BuildMsdk /opt/intel /opt/intel
+
+COPY --from=BuildGgmlib ["/usr/local/include/igdgmm", "/usr/local/include/igdgmm"] ["/usr/local/lib/libigdgmm*", "/usr/local/lib/"] ["/usr/local/lib/pkgconfig/igdgmm.pc", "/usr/local/lib/pkgconfig/igdgmm.pc"]
+
+COPY --from=MediaDriver ["/usr/local/include/igfxcmrt", "/usr/local/include/igfxcmrt"] ["/usr/local/lib/dri/iHD_drv_video.so", "/usr/local/lib/dri/iHD_drv_video.so"] ["/usr/local/lib/libigfxcmrt*", "/usr/local/lib/"] ["/usr/local/lib/pkgconfig/igfxcmrt.pc", "/usr/local/lib/pkgconfig/igfxcmrt.pc"]
+
+COPY root/ /
+
 EXPOSE ${PORT}
 ENTRYPOINT ["/init"]
