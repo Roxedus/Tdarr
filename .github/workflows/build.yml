@@ -50,7 +50,7 @@ jobs:
           METEOR_DEBUG_BUILD: 1
           NODE_OPTIONS: "--max-old-space-size=6144"
         run: |
-          meteor build --debug --server localhost:8265 --directory .\tdarr-windows-2019 --architecture os.windows.x86_64 && echo yeet
+          meteor build --debug --server localhost:8265 --directory .\tdarr-windows-2019 --architecture os.windows.x86_64  | Select-String -Pattern '\(meteor build\)' -CaseSensitive -SimpleMatch
       - name: dummy step
         run: |
           mkdir .\out
