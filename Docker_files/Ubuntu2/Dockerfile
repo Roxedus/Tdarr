@@ -80,7 +80,8 @@ RUN git clone https://github.com/HandBrake/HandBrake.git && \
     git tag --list | grep ^1\.3\. && \
     git checkout refs/tags/$(git tag -l | grep -E '^1\.3\.1' | tail -n 1) && \
     ./configure --enable-qsv --launch-jobs=8 --launch --force && \
-    make --directory=build install
+    make --directory=build install && \
+    chmod +x /usr/local/bin/HandBrakeCLI
 
 FROM BuildBase as BuildLibva
 
@@ -226,7 +227,7 @@ RUN apt update && \
     apt clean && \
     rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/*
 
-COPY --from=BuildHandBrake /usr/local/bin/HandBrakeCLI /usr/local/bin/HandBrakeCLI
+COPY --chown=${PUID}:${PGID} --from=BuildHandBrake /usr/local/bin/HandBrakeCLI /usr/local/bin/HandBrakeCLI
 
 COPY --from=BuildLibva ["/usr/local/include/va", "/usr/local/include/va"] ["/usr/local/lib/libva*", "/usr/local/lib/"] ["/usr/local/lib/pkgconfig/libva*", "/usr/local/lib/pkgconfig/"]
 
