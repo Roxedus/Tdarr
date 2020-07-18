@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.0
 
 ARG bundle="base:bundle"
-ARG BIN_STAGE="base:binaries"
+ARG bin_stage="base:binaries"
 
 FROM ${bundle} AS Bundle
 FROM ${bin_stage} AS BinStage
