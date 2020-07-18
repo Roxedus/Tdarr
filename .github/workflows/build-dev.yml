@@ -1,10 +1,9 @@
-name: Build
+name: Build Develop image
 
 on: [push, pull_request]
 
 jobs:
-  Release:
-    needs: Bundle
+  Develop:
     runs-on: ubuntu-18.04
     steps:
       - name: Checkout
