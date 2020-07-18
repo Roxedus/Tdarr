@@ -1,8 +1,8 @@
 ARG BASE_IMAGE
+ARG VERSION
 FROM ${BASE_IMAGE:-ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe} as GetBundle
 
 LABEL maintainer="<Roxedus,me@roxedus.dev>"
-ARG VERSION
 ENV VERSION="${VERSION}"
 
 RUN mkdir -p /app && \
