@@ -1,7 +1,7 @@
-# syntax = docker/dockerfile-upstream
+# syntax=docker/dockerfile:1.0
 
-ARG BUNDLE=base:bundle
-ARG BIN_STAGE=base:binaries
+ARG BUNDLE="base:bundle"
+ARG BIN_STAGE="base:binaries"
 
 FROM BUNDLE AS Bundle
 FROM BIN_STAGE AS BinStage
