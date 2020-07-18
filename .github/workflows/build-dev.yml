@@ -16,82 +16,103 @@ jobs:
           _sha: ${{github.sha}}
         id: vars
         run: |
-          echo "::set-output name=branch::$(echo ${_ref} | cut -d/ -f3)"
+          echo "::set-output name=branch::$(echo ${_ref} | cut -d/ -f3,4 | sed 's!/!-!')"
           echo "::set-output name=username::$(echo ${_repo} | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')"
           echo "::set-output name=repo::$(echo ${_repo} | tr '[:upper:]' '[:lower:]')"
           echo "::set-output name=sha::${_sha:0:8}"
+
       - name: Print VARS
         run: |
           echo "${{ steps.vars.outputs.branch }} && ${{github.ref}}"
           echo "${{ steps.vars.outputs.username }} && ${{github.repository}}"
           echo ${{ steps.vars.outputs.repo }}
           echo ${{ steps.vars.outputs.sha }}
-      # - name: Install Meteor
-      #   run: curl https://install.meteor.com/ | sh
-      # - name: Install NPM and build
-      #   run: |
-      #     meteor npm install --production
-      #     meteor build --server localhost:8265 --directory Tdarr
-      # - name: Pack ${{ matrix.os }}.zip
-      #   run: |
-      #     zip -r -q tdarr-${{ matrix.os }}.zip Tdarr -x *.exe /
-      # - name: Sanity check
-      #   run: |
-      #     printf "${{ steps.meta_gathering.outputs.version }}"
-      #     printf "${{ steps.meta_gathering.outputs.relname }}"
-      #     printf "${{ steps.meta_gathering.outputs.changelog }}"
-      # - name: Create Release
-      #   id: create_release
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      #   with:
-      #     tag_name: ${{ steps.meta_gathering.outputs.version }}
-      #     release_name: ${{ steps.meta_gathering.outputs.relname }}
-      #     body: |
-      #       ${{ steps.meta_gathering.outputs.changelog }}
-      #     draft: false
-      #     prerelease: true
-      # - name: Upload Linux Asset
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./tdarr-ubuntu-18.04/tdarr-ubuntu-18.04.zip
-      #     asset_name: Tdarr-Linux.zip
-      #     asset_content_type: application/zip
-  # Docker:
-  #   needs: Release
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Create VARS
-  #       id: vars
-  #       env:
-  #         _repo: ${{github.repository}}
-  #         _ref: ${{github.ref}}
-  #       run: |
-  #         echo "::set-output name=branch::$(echo ${_ref} | cut -d/ -f3)"
-  #         echo "::set-output name=username::$(echo ${_repo} | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')"
-  #         echo "::set-output name=repo::$(echo ${_repo} | tr '[:upper:]' '[:lower:]')"
-  #     - name: Print VARS
-  #       run: |
-  #         echo "${{ steps.vars.outputs.branch }} && ${{github.ref}}"
-  #         echo "${{ steps.vars.outputs.username }} && ${{github.repository}}"
-  #         echo ${{ steps.vars.outputs.repo }}
-  #     - name: Build the Docker image
-  #       env:
-  #         REPO: ${{ steps.vars.outputs.repo }}
-  #         BRANCH: ${{ steps.vars.outputs.branch }}
-  #       run: |
-  #         docker build -t $REPO:aio -t $REPO:aio_${{ steps.meta_gathering.outputs.version }} --build-arg VERSION=${{ steps.meta_gathering.outputs.version }} ./Docker_files/Ubuntu2
-  #     - name: Login to registry
-  #       env:
-  #         DOCKER_USERNAME: ${{ steps.vars.outputs.username }}
-  #         DOCKER_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
-  #       run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-  #     - name: Pushes the Docker image
-  #       env:
-  #         REPO: ${{ steps.vars.outputs.repo }}
-  #       run: docker push $REPO
+
+      - name: Build the Docker image
+        working-directory: ./Docker_files
+        env:
+          REPO: ${{ steps.vars.outputs.repo }}
+          BRANCH: ${{ steps.vars.outputs.branch }}
+        run: |
+          make IMAGE=${{ steps.vars.outputs.repo }} tag=${{ steps.vars.outputs.branch }} VERSION=${{ steps.vars.outputs.sha }} dev
+          docker tag ${{ steps.vars.outputs.repo }}:${{ steps.vars.outputs.branch }} ${{ steps.vars.outputs.repo }}:${{ steps.vars.outputs.sha }}
+
+      - name: Login to registry
+        env:
+          DOCKER_USERNAME: ${{ steps.vars.outputs.username }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+      - name: Pushes the Docker image
+        env:
+          REPO: ${{ steps.vars.outputs.repo }}
+        run: docker push $REPO
+# - name: Install Meteor
+#   run: curl https://install.meteor.com/ | sh
+# - name: Install NPM and build
+#   run: |
+#     meteor npm install --production
+#     meteor build --server localhost:8265 --directory Tdarr
+# - name: Pack ${{ matrix.os }}.zip
+#   run: |
+#     zip -r -q tdarr-${{ matrix.os }}.zip Tdarr -x *.exe /
+# - name: Sanity check
+#   run: |
+#     printf "${{ steps.meta_gathering.outputs.version }}"
+#     printf "${{ steps.meta_gathering.outputs.relname }}"
+#     printf "${{ steps.meta_gathering.outputs.changelog }}"
+# - name: Create Release
+#   id: create_release
+#   uses: actions/create-release@v1
+#   env:
+#     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+#   with:
+#     tag_name: ${{ steps.meta_gathering.outputs.version }}
+#     release_name: ${{ steps.meta_gathering.outputs.relname }}
+#     body: |
+#       ${{ steps.meta_gathering.outputs.changelog }}
+#     draft: false
+#     prerelease: true
+# - name: Upload Linux Asset
+#   uses: actions/upload-release-asset@v1
+#   env:
+#     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#   with:
+#     upload_url: ${{ steps.create_release.outputs.upload_url }}
+#     asset_path: ./tdarr-ubuntu-18.04/tdarr-ubuntu-18.04.zip
+#     asset_name: Tdarr-Linux.zip
+#     asset_content_type: application/zip
+# Docker:
+#   needs: Release
+#   runs-on: ubuntu-latest
+#   steps:
+#     - uses: actions/checkout@v2
+#     - name: Create VARS
+#       id: vars
+#       env:
+#         _repo: ${{github.repository}}
+#         _ref: ${{github.ref}}
+#       run: |
+#         echo "::set-output name=branch::$(echo ${_ref} | cut -d/ -f3)"
+#         echo "::set-output name=username::$(echo ${_repo} | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')"
+#         echo "::set-output name=repo::$(echo ${_repo} | tr '[:upper:]' '[:lower:]')"
+#     - name: Print VARS
+#       run: |
+#         echo "${{ steps.vars.outputs.branch }} && ${{github.ref}}"
+#         echo "${{ steps.vars.outputs.username }} && ${{github.repository}}"
+#         echo ${{ steps.vars.outputs.repo }}
+#     - name: Build the Docker image
+#       env:
+#         REPO: ${{ steps.vars.outputs.repo }}
+#         BRANCH: ${{ steps.vars.outputs.branch }}
+#       run: |
+#         docker build -t $REPO:aio -t $REPO:aio_${{ steps.meta_gathering.outputs.version }} --build-arg VERSION=${{ steps.meta_gathering.outputs.version }} ./Docker_files/Ubuntu2
+#     - name: Login to registry
+#       env:
+#         DOCKER_USERNAME: ${{ steps.vars.outputs.username }}
+#         DOCKER_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+#       run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+#     - name: Pushes the Docker image
+#       env:
+#         REPO: ${{ steps.vars.outputs.repo }}
+#       run: docker push $REPO

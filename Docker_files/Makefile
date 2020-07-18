@@ -8,7 +8,7 @@ base=--build-arg BASE_IMAGE=$(BASE_IMAGE) $(label)
 master: binaries release
 	docker build -f Dockerfile -t $(IMAGE):final --label tdarr.version=$(VERSION) $(base) .
 
-dev:
+dev: binaries bundle
 	docker build -f Dockerfile -t $(IMAGE):$(tag) --label tdarr.version=$(VERSION) $(base) .
 
 bintest: binaries
