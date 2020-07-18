@@ -1,10 +1,10 @@
 # syntax = docker/dockerfile-upstream
 
-ARG BUNDLE
-FROM ${BUNDLE:-base:bundle} AS Bundle
+ARG BUNDLE=base:bundle
+ARG BIN_STAGE=base:binaries
 
-ARG BIN_STAGE
-FROM ${BIN_STAGE:-base:binaries} AS BinStage
+FROM BUNDLE AS Bundle
+FROM BIN_STAGE AS BinStage
 
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE:-ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe}
