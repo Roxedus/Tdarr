@@ -1,0 +1,10 @@
+FROM geoffreybooth/meteor-base:1.8.1 AS build
+
+COPY ./ $APP_SOURCE_FOLDER/
+
+RUN bash $SCRIPTS_FOLDER/build-app-npm-dependencies.sh
+
+RUN bash $SCRIPTS_FOLDER/build-meteor-bundle.sh
+
+FROM scratch
+COPY --from=build /opt/bundle /app/Tdarr
