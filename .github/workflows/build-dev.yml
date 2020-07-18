@@ -5,6 +5,10 @@ on: [push, pull_request]
 jobs:
   Develop:
     runs-on: ubuntu-18.04
+    env:
+      DOCKER_BUILDKIT: 1
+      DOCKER_CLI_EXPERIMENTAL: enabled
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -27,6 +31,12 @@ jobs:
           echo "${{ steps.vars.outputs.username }} && ${{github.repository}}"
           echo ${{ steps.vars.outputs.repo }}
           echo ${{ steps.vars.outputs.sha }}
+
+      - name: Docker
+        run: |
+          echo $'{\n    "experimental": true\n}' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+          docker version -f '{{.Server.Experimental}}'
 
       - name: Build the Docker image
         working-directory: ./Docker_files
