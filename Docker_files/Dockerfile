@@ -1,9 +1,12 @@
-ARG BIN_STAGE=base:binaries
-ARG BUNDLE=base:bundle
-ARG BASE_IMAGE
+# syntax = docker/dockerfile-upstream
 
-FROM BUNDLE AS bundle
-FROM BIN_STAGE AS binstage
+ARG BUNDLE
+FROM ${BUNDLE:-base:bundle} AS Bundle
+
+ARG BIN_STAGE
+FROM ${BIN_STAGE:-base:binaries} AS BinStage
+
+ARG BASE_IMAGE
 FROM ${BASE_IMAGE:-ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe}
 
 LABEL maintainer="<Roxedus,me@roxedus.dev>"
@@ -68,8 +71,8 @@ RUN apt update && \
     apt clean && \
     rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/*
 
-COPY --from=bundle /app /app
-COPY --from=binstage / /
+COPY --from=Bundle /app /app
+COPY --from=BinStage / /
 COPY root/ /
 
 EXPOSE ${PORT}
