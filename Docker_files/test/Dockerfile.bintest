@@ -1,10 +1,10 @@
-# syntax = docker/dockerfile-upstream
+# syntax=docker/dockerfile:1.0
 
-ARG BIN_STAGE
-FROM ${BIN_STAGE:-${BASE}:binaries} AS BinStage
+ARG bin_stage="base:binaries"
+ARG base_image="ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe"
 
-ARG BASE_IMAGE
-FROM ${BASE_IMAGE:-ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe}
+FROM ${bin_stage} AS BinStage
+FROM ${base_image}
 
 COPY --from=BinStage ["/", "/"]
 ENV DEBIAN_FRONTEND=noninteractive NVIDIA_DRIVER_CAPABILITIES="compute,video,utility"

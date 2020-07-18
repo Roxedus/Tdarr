@@ -2,12 +2,11 @@
 
 ARG bundle="base:bundle"
 ARG bin_stage="base:binaries"
+ARG base_image="ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe"
 
 FROM ${bundle} AS Bundle
 FROM ${bin_stage} AS BinStage
-
-ARG BASE_IMAGE
-FROM ${BASE_IMAGE:-ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe}
+FROM ${base_image}
 
 LABEL maintainer="<Roxedus,me@roxedus.dev>"
 

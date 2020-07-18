@@ -4,12 +4,13 @@ IMAGE?=base
 tag?=final
 label=--label='maintainer=<Roxedus,me@roxedus.dev>'
 base=--build-arg BASE_IMAGE=$(BASE_IMAGE) $(label)
+bld=--build-arg bin_stage=$(IMAGE):binaries --build-arg bundle=$(IMAGE):bundle
 
 master: release
-	docker build -f Dockerfile -t $(IMAGE):final --label tdarr.version=$(VERSION) $(base) --build-arg bin_stage=$(IMAGE):binaries .
+	docker build -f Dockerfile -t $(IMAGE):final --label tdarr.version=$(version) $(base) $(bld) .
 
 dev: bundle
-	docker build -f Dockerfile -t $(IMAGE):$(tag) --label tdarr.version=$(VERSION) $(base) --build-arg bin_stage=$(IMAGE):binaries --build-arg bundle=$(IMAGE):bundle .
+	docker build -f Dockerfile -t $(IMAGE):$(tag) --label tdarr.version=$(version) $(base) $(bld).
 
 local_master: release binaries master
 
@@ -19,7 +20,7 @@ bintest: binaries
 	docker build -f test/Dockerfile.bintest -t $(IMAGE):test $(base) .
 
 release:
-	docker build -f Dockerfile.release -t $(IMAGE):bundle --build-arg VERSION=$(VERSION) $(base) .
+	docker build -f Dockerfile.release -t $(IMAGE):bundle --build-arg version=$(version) $(base) .
 
 bundle:
 	docker build -f Dockerfile.build -t $(IMAGE):bundle $(base) ..

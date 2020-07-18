@@ -1,8 +1,8 @@
-# syntax = docker/dockerfile-upstream
+# syntax=docker/dockerfile:1.0
 
-ARG BASE_IMAGE
-FROM ${BASE_IMAGE:-ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe} as BuildBase
+ARG base_image="ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe"
 
+FROM ${base_image}
 ENV DEBIAN_FRONTEND=noninteractive MAKEFLAGS="-j14" LD_LIBRARY_PATH=/usr/local/lib CMAKE_INSTALL_PREFIX=/usr/local/lib
 
 ENV AOM=v1.0.0 \
