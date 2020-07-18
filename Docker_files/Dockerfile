@@ -2,8 +2,8 @@ ARG BIN_STAGE=base:binaries
 ARG BUNDLE=base:bundle
 ARG BASE_IMAGE
 
-FROM BUNDLE AS Bundle
-FROM BIN_STAGE AS BinStage
+FROM BUNDLE AS bundle
+FROM BIN_STAGE AS binstage
 FROM ${BASE_IMAGE:-ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe}
 
 LABEL maintainer="<Roxedus,me@roxedus.dev>"
@@ -68,8 +68,8 @@ RUN apt update && \
     apt clean && \
     rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/*
 
-COPY --from=Bundle /app /app
-COPY --from=BinStage / /
+COPY --from=bundle /app /app
+COPY --from=binstage / /
 COPY root/ /
 
 EXPOSE ${PORT}

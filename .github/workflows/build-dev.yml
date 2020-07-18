@@ -46,6 +46,7 @@ jobs:
         run: |
           make IMAGE=${{ steps.vars.outputs.repo }} tag=${{ steps.vars.outputs.branch }} VERSION=${{ steps.vars.outputs.sha }} dev
           docker tag ${{ steps.vars.outputs.repo }}:${{ steps.vars.outputs.branch }} ${{ steps.vars.outputs.repo }}:${{ steps.vars.outputs.sha }}
+          docker image rm ${{ steps.vars.outputs.repo }}:bundle
 
       - name: Login to registry
         env:
