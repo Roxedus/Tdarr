@@ -22,7 +22,7 @@ release:
 	docker build -f Dockerfile.release -t $(IMAGE):bundle --build-arg VERSION=$(VERSION) $(base) .
 
 bundle:
-	docker build -f Dockerfile.build -t $(IMAGE):bundle $(base) $(label) ..
+	docker build -f Dockerfile.build -t $(IMAGE):bundle $(base) ..
 
 binaries:
 	docker build -f Dockerfile.binaries -t $(IMAGE):binaries $(base) --cache-from $(IMAGE):binaries .
