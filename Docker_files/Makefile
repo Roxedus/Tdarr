@@ -9,7 +9,7 @@ master: release
 	docker build -f Dockerfile -t $(IMAGE):final --label tdarr.version=$(VERSION) $(base) --build-arg bin_stage=$(IMAGE):binaries .
 
 dev: bundle
-	docker build -f Dockerfile -t $(IMAGE):$(tag) --label tdarr.version=$(VERSION) $(base) --build-arg bin_stage=$(IMAGE):binaries .
+	docker build -f Dockerfile -t $(IMAGE):$(tag) --label tdarr.version=$(VERSION) $(base) --build-arg bin_stage=$(IMAGE):binaries --build-arg bundle=$(IMAGE):bundle .
 
 local_master: release binaries master
 
