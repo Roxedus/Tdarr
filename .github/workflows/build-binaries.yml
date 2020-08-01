@@ -10,7 +10,7 @@ on:
 
 jobs:
   Binaries:
-    if: ${{ contains(toJSON(github.event.commits.*.msg), '[ci skip]') == 'false' }}
+    if: ${{ ! contains(toJSON(github.event.commits.*.message), '[ci skip]') }}
     runs-on: ubuntu-20.04
     env:
       DOCKER_BUILDKIT: 1
