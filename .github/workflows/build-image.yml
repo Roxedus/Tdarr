@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Print event
-        run: echo ${{ github.event }}
+        run: echo ${{ toJSON(github.event) }}
 
   Develop:
     if: ${{ (github.event == 'push') && (contains(toJSON(github.event.commits.*.msg), '[ci skip]') != 1) }}
