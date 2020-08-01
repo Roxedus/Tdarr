@@ -5,7 +5,6 @@ on:
   push:
     paths:
       - "Docker_files/Dockerfile.binaries"
-      - ".github/workflows/build-binaries.yml"
   schedule:
     - cron: "0 20 5 * *"
 
