@@ -12,6 +12,12 @@ on:
       - released
 
 jobs:
+  Debug:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Print event
+        run: echo %{{ github.event }}
+
   Develop:
     if: ${{ (github.event == 'push') && (contains(toJSON(github.event.commits.*.msg), '[ci skip]') != 1) }}
     runs-on: ubuntu-20.04
