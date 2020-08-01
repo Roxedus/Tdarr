@@ -1,0 +1,25 @@
+#!/usr/bin/with-contenv bash
+
+groupmod -o -g "${PGID}" Tdarr
+usermod -o -u "${PUID}" Tdarr
+
+echo "
+User uid:    $(id -u Tdarr)
+User gid:    $(id -g Tdarr)
+-------------------------------------
+"
+
+ASSETS="/app/Tdarr/bundle/programs/server/assets/"
+
+chown -R Tdarr:Tdarr \
+    "${HOME}" \
+    /temp \
+    /logs \
+    /var/lib/mongodb
+
+if [ ! -f /firstRun ]; then
+    echo "Chowning the appassets, this make take some time"
+    chown -R Tdarr:Tdarr /app/Tdarr/bundle
+    chmod a+rwx -R /app/Tdarr/bundle/programs/server/assets/{app/fileScanner/,app/ffmpeg/}
+    touch /firstRun
+fi
