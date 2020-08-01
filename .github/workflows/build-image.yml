@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Print event
-        run: echo ${{ toJSON(github.event) }}
+        uses: hmarr/debug-action@v1.0.0
 
   Develop:
     if: ${{ (github.event == 'push') && (contains(toJSON(github.event.commits.*.msg), '[ci skip]') != 1) }}
