@@ -40,9 +40,9 @@ jobs:
         run: |
           echo "${{ steps.vars.outputs.branch }} && ${{github.ref}}"
           echo "${{ steps.vars.outputs.username }} && ${{github.repository}}"
-          echo ${{ steps.vars.outputs.repo }}
-          echo ${{ steps.vars.outputs.version }}
-          echo ${{ steps.vars.outputs.sha }}
+          echo "${{ steps.vars.outputs.repo }}"
+          echo "${{ steps.vars.outputs.version }}"
+          echo "${{ steps.vars.outputs.sha }}"
 
       - name: Docker Experimental
         run: |
