@@ -1,0 +1,120 @@
+name: Build image
+
+on:
+  push:
+    branches:
+      - "dev"
+      - "develop"
+      - "feature/**"
+  release:
+    types:
+      - prereleased
+      - released
+
+jobs:
+  Develop:
+    if: ${{ ! contains(toJSON(github.event.commits.*.msg), '[ci skip]') && github.event == 'push' }}
+    runs-on: ubuntu-20.04
+    env:
+      DOCKER_BUILDKIT: 1
+      DOCKER_CLI_EXPERIMENTAL: enabled
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create VARS
+        env:
+          _repo: ${{github.repository}}
+          _ref: ${{github.ref}}
+          _sha: ${{github.sha}}
+        id: vars
+        run: |
+          echo "::set-output name=branch::$(echo ${_ref} | cut -d/ -f3,4 | sed 's!/!-!' | tr '[:upper:]' '[:lower:]')"
+          echo "::set-output name=username::$(echo ${_repo} | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')"
+          echo "::set-output name=repo::$(echo ${_repo} | tr '[:upper:]' '[:lower:]')"
+          echo "::set-output name=sha::${_sha:0:8}"
+
+      - name: Print VARS
+        if: "contains(toJSON(github.event.commits.*.msg), '[debug]')"
+        run: |
+          echo "${{ steps.vars.outputs.branch }} && ${{github.ref}}"
+          echo "${{ steps.vars.outputs.username }} && ${{github.repository}}"
+          echo ${{ steps.vars.outputs.repo }}
+          echo ${{ steps.vars.outputs.version }}
+          echo ${{ steps.vars.outputs.sha }}
+
+      - name: Docker Experimental
+        run: |
+          echo $'{\n    "experimental": true\n}' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+
+      - name: Build the Docker image
+        working-directory: ./Docker_files
+        env:
+          REPO: ${{ steps.vars.outputs.repo }}
+          BRANCH: ${{ steps.vars.outputs.branch }}
+        run: |
+          make IMAGE=${{ steps.vars.outputs.repo }} tag=${{ steps.vars.outputs.branch }} version=${{ steps.vars.outputs.sha }} dev
+          docker tag ${{ steps.vars.outputs.repo }}:${{ steps.vars.outputs.branch }} ${{ steps.vars.outputs.repo }}:${{ steps.vars.outputs.branch }}-${{ steps.vars.outputs.sha }}
+          docker image rm ${{ steps.vars.outputs.repo }}:bundle
+
+      - name: Login to registry
+        env:
+          DOCKER_USERNAME: ${{ steps.vars.outputs.username }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+      - name: Pushes the Docker image
+        env:
+          REPO: ${{ steps.vars.outputs.repo }}
+        run: docker push $REPO
+
+  Master:
+    if: ${{ github.event == 'release' }}
+    runs-on: ubuntu-20.04
+    env:
+      DOCKER_BUILDKIT: 1
+      DOCKER_CLI_EXPERIMENTAL: enabled
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create VARS
+        env:
+          _repo: ${{github.repository}}
+          _ref: ${{github.ref}}
+          _sha: ${{github.sha}}
+        id: vars
+        run: |
+          echo "::set-output name=branch::$(echo ${_ref} | cut -d/ -f3,4 | sed 's!/!-!' | tr '[:upper:]' '[:lower:]')"
+          echo "::set-output name=version::$(echo ${_ref} | cut -d/ -f3,4)"
+          echo "::set-output name=username::$(echo ${_repo} | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')"
+          echo "::set-output name=repo::$(echo ${_repo} | tr '[:upper:]' '[:lower:]')"
+          echo "::set-output name=sha::${_sha:0:8}"
+
+      - name: Docker Experimental
+        run: |
+          echo $'{\n    "experimental": true\n}' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+
+      - name: Build the Docker image
+        working-directory: ./Docker_files
+        run: |
+          make IMAGE=${{ steps.vars.outputs.repo }} version=${{ steps.vars.outputs.version }} master
+          docker tag ${{ steps.vars.outputs.repo }}:final ${{ steps.vars.outputs.repo }}:latest
+          docker tag ${{ steps.vars.outputs.repo }}:final ${{ steps.vars.outputs.repo }}:$( echo ${{ steps.vars.outputs.version }} | cut -c2- )
+          docker image rm ${{ steps.vars.outputs.repo }}:final
+          docker image rm ${{ steps.vars.outputs.repo }}:bundle
+
+      - name: Login to registry
+        env:
+          DOCKER_USERNAME: ${{ steps.vars.outputs.username }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+      - name: Pushes the Docker image
+        env:
+          REPO: ${{ steps.vars.outputs.repo }}
+        run: docker push $REPO

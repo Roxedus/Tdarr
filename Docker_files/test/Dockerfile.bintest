@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1.0
+
+ARG bin_stage="base:binaries"
+ARG base_image="ubuntu@sha256:3013b0d761d4bad6ff16dd2805887a2f2c3fc140d6206086698b5c3e44e0f7fe"
+
+FROM ${bin_stage} AS BinStage
+FROM ${base_image}
+
+COPY --from=BinStage ["/", "/"]
+ENV DEBIAN_FRONTEND=noninteractive NVIDIA_DRIVER_CAPABILITIES="compute,video,utility"
+
+RUN ffmpeg --help
+RUN ffprobe --help
+RUN ccextractor --help
+RUN HandBrakeCLI --help

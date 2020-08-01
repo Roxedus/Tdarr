@@ -1,0 +1,19 @@
+# syntax=docker/dockerfile:1.0
+
+ARG base_image="ubuntu@sha256:60f560e52264ed1cb7829a0d59b1ee7740d7580e0eb293aca2d722136edb1e24"
+
+FROM ${base_image} AS get_bundle
+
+LABEL maintainer="<Roxedus,me@roxedus.dev>"
+
+ARG version
+ENV version="${version}"
+
+RUN mkdir -p /app && \
+    apt-get update && apt-get install -y curl unzip && \
+    curl -o /tmp/bundle.zip -L \
+        "https://github.com/Roxedus/Tdarr/releases/download/${version}/Tdarr-Linux.zip" && \
+    unzip -q /tmp/bundle.zip -d /app -x *.exe
+
+FROM scratch
+COPY --from=get_bundle ["/app/", "/app/"]

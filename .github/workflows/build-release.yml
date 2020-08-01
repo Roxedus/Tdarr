@@ -1,0 +1,71 @@
+name: Create release
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  Release:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get version and changelog
+        id: meta_gathering
+        run: |
+          sudo apt install pcregrep
+          changelog=$(pcregrep -M '(?:(?:\W{1,20}<br />){1,5}\n([\W|\w]*)\</p>)' imports/ui/tab_Dev_latest.jsx | tr -s " ")
+          changelog=${changelog//$'\n' /$'\n'}
+          changelog=${changelog:1}
+          changelog=${changelog//'<br />'/}
+          changelog=${changelog//$'\n''</p>'/}
+          relname=$(echo "$changelog" | head -1 | tr -d ":")
+          changelog="${changelog//'%'/'%25'}"
+          changelog="${changelog//$'\n'/'%0A'}"
+          changelog="${changelog//$'\r'/'%0D'}"
+          echo "::set-output name=version::v$(grep "newVersion, setNewVersion" imports/ui/App.jsx | awk -F"[()]" '{print $2}')-Beta"
+          echo "::set-output name=relname::$relname"
+          echo "::set-output name=changelog::$changelog"
+
+      - name: Install Meteor
+        run: curl https://install.meteor.com/ | sh
+
+      - name: Install NPM and build
+        run: |
+          meteor npm install --production
+          meteor build --server localhost:8265 --directory Tdarr
+
+      - name: Pack ${{ matrix.os }}.zip
+        run: |
+          zip -r -q tdarr-${{ matrix.os }}.zip Tdarr -x *.exe /
+
+      - name: Sanity check
+        run: |
+          printf "${{ steps.meta_gathering.outputs.version }}"
+          printf "${{ steps.meta_gathering.outputs.relname }}"
+          printf "${{ steps.meta_gathering.outputs.changelog }}"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.1.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps.meta_gathering.outputs.version }}
+          release_name: ${{ steps.meta_gathering.outputs.relname }}
+          body: |
+            ${{ steps.meta_gathering.outputs.changelog }}
+          draft: false
+          prerelease: true
+
+      - name: Upload Linux Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: tdarr-${{ matrix.os }}.zip
+          asset_name: Tdarr-Linux.zip
+          asset_content_type: application/zip

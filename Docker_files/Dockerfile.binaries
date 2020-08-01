@@ -1,0 +1,594 @@
+# syntax=docker/dockerfile:1.0
+
+ARG base_image="ubuntu@sha256:60f560e52264ed1cb7829a0d59b1ee7740d7580e0eb293aca2d722136edb1e24"
+
+FROM ${base_image} AS buildbase
+ENV DEBIAN_FRONTEND=noninteractive MAKEFLAGS="-j14" LD_LIBRARY_PATH=/usr/local/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64 CMAKE_INSTALL_PREFIX=/usr/local/lib PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH} LANGUAGE="en_US.UTF-8" LANG="en_US.UTF-8"
+
+ENV AOM=v1.0.0 \
+    CCEXTRACTOR=0.88 \
+    FDKAAC=2.0.1 \
+    FFMPEG=4.2 \
+    FONTCONFIG=2.13.92 \
+    FREETYPE=2.9.1 \
+    FRIBIDI=1.0.8 \
+    GMMLIB=20.2.3 \
+    HANDBRAKE=1.3.1 \
+    KVAZAAR=1.3.0 \
+    LAME=3.100 \
+    LIBASS=0.14.0 \
+    LIBDRM=2.4.100 \
+    LIBPNG=1.6.37 \
+    LIBVA=2.8.0 \
+    LIBVDPAU=1.2 \
+    LIBVIDSTAB=1.1.0 \
+    LIBVMAF=master \
+    MEDIADRIVER=20.2.0 \
+    MEDIASDK=20.2.0 \
+    NVCODEC=n9.1.23.1 \
+    OGG=1.3.4 \
+    OPENCOREAMR=0.1.5 \
+    OPENJPEG=2.3.1 \
+    OPUS=1.3 \
+    THEORA=1.1.1 \
+    VORBIS=1.3.6 \
+    VPX=1.8.2 \
+    X265=3.2.1 \
+    XVID=1.3.7
+
+RUN apt-get update && \
+    apt-get install -y apt-utils locales tzdata software-properties-common && \
+        locale-gen "${LANG}" && \
+        dpkg-reconfigure locales && \
+    add-apt-repository ppa:kisak/kisak-mesa && \
+    apt-get update -qq && \
+    apt-get -y install \
+        autoconf \
+        automake \
+        autopoint \
+        bison \
+        build-essential \
+        bzip2 \
+        bzip2 \
+        ca-certificates \
+        cmake \
+        curl \
+        curl \
+        diffutils \
+        doxygen \
+        flex \
+        g++ \
+        gcc \
+        git \
+        gperf \
+        gperf \
+        gzip \
+        intltool \
+        libbz2-dev \
+        libcurl4-gnutls-dev \
+        libexpat1-dev \
+        libgcc-7-dev \
+        libgl1-mesa-dev \
+        libgl1-mesa-glx \
+        libglew-dev \
+        libglfw3-dev \
+        libgomp1 \
+        libgtk-3-dev \
+        libharfbuzz-dev \
+        libjansson-dev \
+        libleptonica-dev \
+        liblzma-dev \
+        libnuma-dev \
+        libpciaccess-dev \
+        libpciaccess0 \
+        libperl-dev \
+        libsamplerate-dev \
+        libsdl2-dev \
+        libspeex-dev \
+        libssl-dev \
+        libtesseract-dev \
+        libtool \
+        libtool-bin \
+        libturbojpeg0-dev \
+        libv4l-dev \
+        libx11-dev \
+        libxcb-shm0-dev \
+        libxcb-xfixes0-dev \
+        libxcb1-dev \
+        libxext-dev \
+        libxml2-dev \
+        m4 \
+        make \
+        mercurial \
+        nasm \
+        ninja-build \
+        openbox \
+        patch \
+        pax \
+        perl \
+        pkg-config \
+        python \
+        python3 \
+        python3-pip\
+        python3-setuptools \
+        python3-wheel \
+        tar \
+        tesseract-ocr \
+        texinfo \
+        vainfo \
+        vdpauinfo \
+        wget \
+        x11proto-xext-dev \
+        xorg \
+        xorg-dev \
+        xserver-xorg-dev \
+        xz-utils \
+        yasm \
+        zlib1g-dev && \
+    pip3 install meson
+
+FROM buildbase as buildprereq
+
+ENV CUDA_VERSION='11.0.194'
+
+RUN curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub | apt-key add - && \
+    echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64 /" > /etc/apt/sources.list.d/cuda.list && \
+    CUDA_MAJOR="${CUDA_VERSION%.*}" && \
+    CUDA_MAJOR_="$( echo "$CUDA_MAJOR" | tr  '.' '-'  )" && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        cuda-nvcc-${CUDA_MAJOR_} \
+        libnpp-${CUDA_MAJOR_} \
+        libnpp-dev-${CUDA_MAJOR_} && \
+    ln -s cuda-${CUDA_MAJOR} /usr/local/cuda && \
+    ldconfig && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /tmp/fontconfig && \
+    curl -Lf \
+        https://www.freedesktop.org/software/fontconfig/release/fontconfig-${FONTCONFIG}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/fontconfig && \
+    cd /tmp/fontconfig && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+
+RUN mkdir -p /tmp/freetype && \
+    curl -Lf \
+        https://download.savannah.gnu.org/releases/freetype/freetype-${FREETYPE}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/freetype && \
+        cd /tmp/freetype && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/fribidi && \
+    curl -Lf \
+        https://github.com/fribidi/fribidi/archive/v${FRIBIDI}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/fribidi && \
+    cd /tmp/fribidi && \
+    ./autogen.sh && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make -j 1  && \
+    make install
+
+RUN mkdir -p /tmp/lame && \
+    curl -Lf \
+        http://downloads.sourceforge.net/project/lame/lame/3.100/lame-${LAME}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/lame && \
+    cd /tmp/lame && \
+    cp /usr/share/automake-1.16/config.guess config.guess && \
+    cp /usr/share/automake-1.16/config.sub config.sub && \
+    ./configure \
+        --disable-frontend \
+        --disable-static \
+        --enable-nasm \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/ogg && \
+    curl -Lf \
+        http://downloads.xiph.org/releases/ogg/libogg-${OGG}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/ogg && \
+    cd /tmp/ogg && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/opus && \
+    curl -Lf \
+        https://archive.mozilla.org/pub/opus/opus-${OPUS}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/opus && \
+    cd /tmp/opus && \
+    autoreconf -fiv && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/libva && \
+    curl -Lf \
+        https://github.com/intel/libva/archive/${LIBVA}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/libva && \
+    cd /tmp/libva && \
+    ./autogen.sh && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/x264 && \
+    curl -Lf \
+        https://code.videolan.org/videolan/x264/-/archive/master/x264-stable.tar.bz2 | \
+        tar -jx --strip-components=1 -C /tmp/x264 && \
+    cd /tmp/x264 && \
+    ./configure \
+        --disable-cli \
+        --disable-static \
+        --enable-pic \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/vpx && \
+    curl -Lf \
+        https://github.com/webmproject/libvpx/archive/v${VPX}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/vpx && \
+    cd /tmp/vpx && \
+    ./configure \
+        --disable-debug \
+        --disable-docs \
+        --disable-examples \
+        --disable-install-bins \
+        --disable-static \
+        --disable-unit-tests \
+        --enable-pic \
+        --enable-shared \
+        --enable-vp8 \
+        --enable-vp9 \
+        --enable-vp9-highbitdepth && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/libdrm && \
+    curl -Lf \
+        https://dri.freedesktop.org/libdrm/libdrm-${LIBDRM}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/libdrm && \
+    cd /tmp/libdrm && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/x265 && \
+    curl -Lf \
+        http://download.videolan.org/pub/videolan/x265/x265_${X265}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/x265 && \
+    cd /tmp/x265/build/linux && \
+    ./multilib.sh && \
+    make -C 8bit install
+
+RUN mkdir -p /tmp/vorbis && \
+    curl -Lf \
+        http://downloads.xiph.org/releases/vorbis/libvorbis-${VORBIS}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/vorbis && \
+    cd /tmp/vorbis && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/libass && \
+    curl -Lf \
+        https://github.com/libass/libass/archive/${LIBASS}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/libass && \
+    cd /tmp/libass && \
+    ./autogen.sh && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/theora && \
+    curl -Lf \
+        http://downloads.xiph.org/releases/theora/libtheora-${THEORA}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/theora && \
+    cd /tmp/theora && \
+    cp /usr/share/automake-1.16/config.guess config.guess && \
+    cp /usr/share/automake-1.16/config.sub config.sub && \
+    curl -fL \
+        'https://gitlab.xiph.org/xiph/theora/-/commit/7288b539c52e99168488dc3a343845c9365617c8.diff' \
+        > png.patch && \
+    patch ./examples/png2theora.c < png.patch && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+FROM buildprereq as buildffmpeg
+
+RUN mkdir -p /tmp/aom && \
+    git clone \
+        --branch ${AOM} \
+        --depth 1 https://aomedia.googlesource.com/aom \
+        /tmp/aom && \
+    cd /tmp/aom && \
+    rm -rf \
+        CMakeCache.txt \
+        CMakeFiles && \
+    mkdir -p aom_build && \
+    cd aom_build && \
+    cmake \
+        -DBUILD_STATIC_LIBS=0 .. && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/fdk-aac && \
+    curl -Lf \
+        https://github.com/mstorsjo/fdk-aac/archive/v${FDKAAC}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/fdk-aac && \
+    cd /tmp/fdk-aac && \
+    autoreconf -fiv && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/ffnvcodec && \
+    git clone \
+        --branch ${NVCODEC} \
+        --depth 1 https://git.videolan.org/git/ffmpeg/nv-codec-headers.git \
+        /tmp/ffnvcodec && \
+    cd /tmp/ffnvcodec && \
+    make install
+
+RUN mkdir -p /tmp/kvazaar && \
+    curl -Lf \
+        https://github.com/ultravideo/kvazaar/archive/v${KVAZAAR}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/kvazaar  && \
+    cd /tmp/kvazaar && \
+    ./autogen.sh && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/libvdpau && \
+    git clone \
+        --branch libvdpau-${LIBVDPAU} \
+        --depth 1 https://gitlab.freedesktop.org/vdpau/libvdpau.git \
+        /tmp/libvdpau && \
+    cd /tmp/libvdpau && \
+    ./autogen.sh && \
+    ./configure \
+        --disable-static \
+        --enable-shared && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/vmaf && \
+    git clone \
+        --branch ${LIBVMAF} \
+        https://github.com/Netflix/vmaf.git \
+        /tmp/vmaf && \
+    cd /tmp/vmaf/libvmaf && \
+    meson build --buildtype release && \
+    ninja -vC build && \
+    ninja -vC build install
+
+RUN mkdir -p /tmp/opencore-amr && \
+    curl -Lf \
+        http://downloads.sourceforge.net/project/opencore-amr/opencore-amr/opencore-amr-${OPENCOREAMR}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/opencore-amr && \
+    cd /tmp/opencore-amr && \
+    ./configure \
+        --disable-static \
+        --enable-shared  && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/openjpeg && \
+    curl -Lf \
+        https://github.com/uclouvain/openjpeg/archive/v${OPENJPEG}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/openjpeg && \
+    cd /tmp/openjpeg && \
+    rm -Rf thirdparty/libpng/* && \
+    curl -Lf \
+        https://download.sourceforge.net/libpng/libpng-${LIBPNG}.tar.gz | \
+        tar -zx --strip-components=1 -C thirdparty/libpng/ && \
+    cmake \
+        -DBUILD_STATIC_LIBS=0 \
+        -DBUILD_THIRDPARTY:BOOL=ON . && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/vid.stab && \
+    curl -Lf \
+        https://github.com/georgmartius/vid.stab/archive/v${LIBVIDSTAB}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/vid.stab && \
+    cd /tmp/vid.stab && \
+    cmake \
+        -DBUILD_STATIC_LIBS=0 . && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/xvid && \
+    curl -Lf \
+        https://downloads.xvid.com/downloads/xvidcore-${XVID}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/xvid && \
+    cd /tmp/xvid/build/generic && \
+    ./configure && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/ffmpeg && \
+    which nvcc && \
+    nvcc --version && \
+    curl -Lf \
+        https://ffmpeg.org/releases/ffmpeg-${FFMPEG}.tar.bz2 | \
+        tar -jx --strip-components=1 -C /tmp/ffmpeg && \
+    cd /tmp/ffmpeg && \
+    ./configure \
+        --extra-cflags=-I/usr/local/cuda/include \
+        --extra-ldflags=-L/usr/local/cuda/lib64 \
+        --nvccflags="-gencode arch=compute_52,code=sm_52 -O2" \
+        --disable-debug \
+        --disable-doc \
+        --disable-ffplay \
+        --disable-static \
+        #--enable-avresample \
+        --enable-cuda-nvcc \
+        --enable-cuda-sdk \
+        --enable-cuvid \
+        --enable-ffprobe \
+        --enable-gpl \
+        --enable-libaom \
+        --enable-libass \
+        --enable-libfdk_aac \
+        --enable-libfreetype \
+        --enable-libkvazaar \
+        --enable-libmp3lame \
+        --enable-libnpp \
+        --enable-libopencore-amrnb \
+        --enable-libopenjpeg \
+        --enable-libopus \
+        --enable-libtheora \
+        --enable-libv4l2 \
+        --enable-libvidstab \
+        --enable-libvmaf \
+        --enable-libvorbis \
+        --enable-libvpx \
+        --enable-libx264 \
+        --enable-libx265 \
+        --enable-libxml2 \
+        --enable-libxvid \
+        --enable-nonfree \
+        --enable-nvdec \
+        --enable-nvenc \
+        --enable-openssl \
+        --enable-shared \
+        --enable-small \
+        --enable-stripping \
+        --enable-vaapi \
+        --enable-vdpau \
+        --enable-version3 && \
+    make || (cat ffbuild/config.log && exit 1) && \
+    ls /tmp/ffmpeg &&\
+    cd /tmp/ffmpeg && \
+    make install
+
+RUN mkdir -p /tmp/ccextractor && \
+    curl -Lf \
+        https://github.com/CCExtractor/ccextractor/archive/v${CCEXTRACTOR}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/ccextractor && \
+    cd /tmp/ccextractor/linux && \
+    ./autogen.sh && \
+    ./configure &&\
+    make && \
+    make install
+#./build_hardsubx
+
+RUN ldconfig && \
+    mkdir -p /buildout/usr/local/bin && \
+    cp /tmp/ffmpeg/ffmpeg /buildout/usr/local/bin && \
+    cp /tmp/ffmpeg/ffprobe /buildout/usr/local/bin && \
+    cp /tmp/ccextractor/linux/ccextractor /buildout/usr/local/bin && \
+    mkdir -p /buildout/usr/lib && \
+    ldd /tmp/ffmpeg/ffmpeg \
+        | awk '/local/ {print $3}' \
+        | xargs -i cp -L {} /buildout/usr/lib/ && \
+    mkdir -p /buildout/usr/lib/x86_64-linux-gnu && \
+    ldd /tmp/ffmpeg/ffmpeg \
+        | awk '/usr\/lib\/x86_64-linux-gnu/ {print $3}' \
+        | xargs -i cp -L {} /buildout/usr/lib/x86_64-linux-gnu/ && \
+    #mkdir -p /buildout/lib/x86_64-linux-gnu/ && \
+    ldd /tmp/ffmpeg/ffmpeg | grep -iv usr \
+        | awk '/lib\/x86_64-linux-gnu/ {print $3}' \
+        | xargs -i cp -L {} /buildout/usr/lib/x86_64-linux-gnu/ && \
+    ldd /tmp/ccextractor/linux/ccextractor \
+        | awk '/local/ {print $3}' \
+        | xargs -i cp -L {} /buildout/usr/lib/ && \
+    cp -a /usr/local/lib/libdrm_* /buildout/usr/lib/
+
+FROM buildprereq as buildhandbreake
+
+RUN mkdir -p /tmp/gmmlib  && \
+    curl -Lf \
+        https://github.com/intel/gmmlib/archive/intel-gmmlib-${GMMLIB}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/gmmlib  && \
+    mkdir -p /tmp/gmmlib/build && \
+    cd /tmp/gmmlib/build && \
+    cmake .. && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/msdk   && \
+    git clone \
+        --branch intel-mediasdk-${MEDIASDK} \
+        --depth 1 \
+        https://github.com/Intel-Media-SDK/MediaSDK.git \
+        /tmp/msdk && \
+    mkdir -p /tmp/msdk/build && \
+    cd /tmp/msdk/build && \
+    cmake .. && \
+    make && \
+    make install
+
+RUN mkdir -p /tmp/mediadriver && \
+    curl -Lf \
+        https://github.com/intel/media-driver/archive/intel-media-${MEDIADRIVER}.tar.gz | \
+        tar -zx --strip-components=1 -C /tmp/mediadriver && \
+    mkdir -p /tmp/mediadriver/build && \
+    cd /tmp/mediadriver/build && \
+    cmake ..  && \
+    make  && \
+    make install
+
+RUN mkdir -p /tmp/handbrake && \
+    git clone \
+        --branch ${HANDBRAKE} \
+        --depth 1 https://github.com/HandBrake/HandBrake.git \
+        /tmp/handbrake && \
+    cd /tmp/handbrake && \
+    ./configure \
+        --enable-nvenc \
+        --enable-qsv \
+        --enable-x265 \
+        --disable-gtk \
+        --launch-jobs=14 \
+        --launch \
+        --force && \
+    make --directory=build install && \
+    chmod +x /tmp/handbrake/build/HandBrakeCLI
+
+RUN ldconfig && \
+    mkdir -p /buildout/usr/local/bin && \
+    cp /tmp/handbrake/build/HandBrakeCLI /buildout/usr/local/bin && \
+    mkdir -p /buildout/usr/lib && \
+    ldd /tmp/handbrake/build/HandBrakeCLI \
+        | awk '/local/ {print $3}' \
+        | xargs -i cp -L {} /buildout/usr/lib/ && \
+    mkdir -p /buildout/usr/lib/x86_64-linux-gnu && \
+    ldd /tmp/handbrake/build/HandBrakeCLI \
+        | awk '/usr\/lib\/x86_64-linux-gnu/ {print $3}' \
+        | xargs -i cp -L {} /buildout/usr/lib/x86_64-linux-gnu/
+
+FROM scratch
+COPY --from=buildffmpeg ["/buildout/", "/buildout/"]
+COPY --from=buildhandbreake ["/buildout/", "/buildout/"]

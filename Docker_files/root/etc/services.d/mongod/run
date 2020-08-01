@@ -1,0 +1,9 @@
+#!/usr/bin/with-contenv bash
+
+if [ "${MONGO_URL}" == "mongodb://localhost:27017/Tdarr" ]; then
+    echo "Starting MongoDB"
+
+    exec s6-setuidgid Tdarr /usr/bin/mongod --bind_ip 127.0.0.1 --logappend --logpath=/logs/mongo.log --dbpath=/var/lib/mongodb "${MONGO_PARAM:---quiet}"
+else
+    echo "MONGO_URL is changed, assuming pointed to a external instance, not starting MongoDB"
+fi
