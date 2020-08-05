@@ -13,7 +13,7 @@ LABEL maintainer="<Roxedus,me@roxedus.dev>"
 ENV PUID="1000" PGID="1000" UMASK="002" TZ="Etc/UTC" HOME="/home/Tdarr" MONGO_URL="mongodb://localhost:27017/Tdarr" PORT="8265" ROOT_URL="http://localhost"
 ENV LANGUAGE="en_US.UTF-8" LANG=$LANGUAGE LC_ALL=$LANGUAGE NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" DEBIAN_FRONTEND="noninteractive" \
     LIBVA_DRIVERS_PATH="/usr/lib/x86_64-linux-gnu/dri/" LD_LIBRARY_PATH="/usr/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64"
-ENV S6_REL=2.0.0.1 NODE_VERSION=8 MONGO_VERSION=4.0
+ENV S6_REL=2.0.0.1 NODE_VERSION=12 MONGO_VERSION=4.0
 
 RUN apt-get update && \
     apt-get install -y apt-utils locales tzdata && \
@@ -36,12 +36,13 @@ RUN apt-get update && \
         unzip \
         vainfo \
         vdpauinfo && \
-    #DISTRO="$(lsb_release -s -c)" && \
-    DISTRO='bionic' && \
+    DISTRO="$(lsb_release -s -c)" && \
+    #DISTRO='bionic' && \
     curl -sSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
     curl -sSL https://www.mongodb.org/static/pgp/server-$MONGO_VERSION.asc |  apt-key add - && \
     echo "deb https://deb.nodesource.com/node_$NODE_VERSION.x $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list && \
-    echo "deb https://repo.mongodb.org/apt/ubuntu $DISTRO/mongodb-org/$MONGO_VERSION multiverse" | tee /etc/apt/sources.list.d/mongodb-org.list && \
+    echo "deb-src https://deb.nodesource.com/node_$NODE_VERSION.x $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list && \
+    echo "deb https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/$MONGO_VERSION multiverse" | tee /etc/apt/sources.list.d/mongodb-org.list && \
     add-apt-repository ppa:kisak/kisak-mesa && \
     apt-get update && \
     apt-get install -y --no-install-recommends --no-install-suggests \
