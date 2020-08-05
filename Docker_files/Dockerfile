@@ -41,7 +41,6 @@ RUN apt-get update && \
     curl -sSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
     curl -sSL https://www.mongodb.org/static/pgp/server-$MONGO_VERSION.asc |  apt-key add - && \
     echo "deb https://deb.nodesource.com/node_$NODE_VERSION.x $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list && \
-    echo "deb-src https://deb.nodesource.com/node_$NODE_VERSION.x $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list && \
     echo "deb https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/$MONGO_VERSION multiverse" | tee /etc/apt/sources.list.d/mongodb-org.list && \
     add-apt-repository ppa:kisak/kisak-mesa && \
     apt-get update && \
@@ -50,8 +49,7 @@ RUN apt-get update && \
         libgl1-mesa-glx \
         mongodb-org-server \
         mongodb-org-shell \
-        nodejs \
-        npm && \
+        nodejs && \
     curl -o /tmp/s6-overlay.tar.gz -L \
     "https://github.com/just-containers/s6-overlay/releases/download/v${S6_REL}/s6-overlay-amd64.tar.gz" && \
     tar xfvz /tmp/s6-overlay.tar.gz -C / --exclude="./bin" && \
