@@ -12,7 +12,7 @@ LABEL maintainer="<Roxedus,me@roxedus.dev>"
 
 ENV PUID="1000" PGID="1000" UMASK="002" TZ="Etc/UTC" HOME="/home/Tdarr" MONGO_URL="mongodb://localhost:27017/Tdarr" PORT="8265" ROOT_URL="http://localhost"
 ENV LANGUAGE="en_US.UTF-8" LANG=$LANGUAGE LC_ALL=$LANGUAGE NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" DEBIAN_FRONTEND="noninteractive" \
-    LIBVA_DRIVERS_PATH="/usr/lib/x86_64-linux-gnu/dri/" LD_LIBRARY_PATH="/usr/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64"
+    LIBVA_DRIVERS_PATH="/usr/lib/x86_64-linux-gnu/dri/" LD_LIBRARY_PATH="/usr/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64" HandBrakePath="/usr/local/bin/HandBrakeCLI" FFmpegPath="/usr/local/bin/ffmpeg"
 ENV S6_REL=2.0.0.1 NODE_VERSION=12 MONGO_VERSION=4.0
 
 RUN apt-get update && \
@@ -69,9 +69,7 @@ RUN apt-get update && \
         /var/tmp/*
 
 COPY --from=bundle_ /app /app
-RUN rm /app/Tdarr/bundle/programs/server/assets/app/ffmpeg/ffmpeg42/ffmpeg && \
-    ln -s /usr/local/bin/ffmpeg /app/Tdarr/bundle/programs/server/assets/app/ffmpeg/ffmpeg42/ffmpeg && \
-    cd /app/Tdarr/bundle/programs/server/ && \
+RUN cd /app/Tdarr/bundle/programs/server/ && \
     npm install
 
 COPY --from=binstage / /
